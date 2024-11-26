@@ -1,0 +1,57 @@
+﻿@page "/categoria/edit/{categoriaid:int}"
+@inject ILogger<Edit> logger
+@inject HttpClient http
+
+<h2>Editar Categoria</h2>
+
+<CategoriaForm Categoria="@categoria" OnValidSubmit="@EditarCategoria"
+               ButtonTextSubmit="Salvar" ButtonTextCancelar="Cancelar">
+
+</CategoriaForm>
+
+@code {
+
+    [Parameter]
+    public int categoriaid { get; set; }
+
+    Categoria categoria = new Categoria();
+
+
+    protected async override Task OnParametersSetAsync()
+    {
+        try
+        {
+            logger.LogInformation("Iniciando carregamento da categoria para edição...");
+            var response = await http.GetFromJsonAsync<Categoria>($"api/categoria/{categoriaid}");
+            if (response != null)
+            {
+                categoria = response;
+                logger.LogInformation("Categoria carregada com sucesso para edição.");
+            }
+            else
+            {
+                logger.LogWarning("A categoria retornou nula da API.");
+                // Tratamento para categoria nula, se necessário
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao carregar a categoria para edição");
+        }
+    }
+
+    async Task EditarCategoria()
+    {
+        try
+        {
+            logger.LogInformation("Enviando requisição para editar a categoria...");
+            await http.PutAsJsonAsync("api/categoria", categoria);
+            logger.LogInformation("Categoria editada com sucesso.");
+            navigation.NavigateTo("categoria");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao editar a categoria");
+        }
+    }
+}

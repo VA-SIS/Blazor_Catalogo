@@ -1,0 +1,59 @@
+﻿@page "/produto/edit/{produtoid:int}"
+@inject ILogger<Edit> logger
+@inject HttpClient http
+
+<ProdutoForm Produto="@produto" OnValidSubmit="EditarProduto"
+              ButtonTextCancelar="Cancelar" ButtonTextSubmit="Salvar">
+</ProdutoForm>
+
+@code {
+
+    private Produto? produto = new Produto();
+    private string? imagemRemota { get; set; }
+
+    [Parameter]
+    public int produtoid { get; set; }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        try
+        {
+            produto = await http.GetFromJsonAsync<Produto>($"api/produto/{produtoid}");
+            if (produto != null)
+            {
+                imagemRemota = produto.ImagemUrl;
+            }
+            else
+            {
+                logger.LogWarning("Produto não encontrado. ID: {ProdutoId}", produtoid);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao carregar o produto para edição. ID: {ProdutoId}", produtoid);
+        }
+    }
+
+    async Task EditarProduto()
+    {
+        try
+        {
+            logger.LogInformation("Enviando requisição para editar o produto...");
+            if (produto != null)
+            {
+                imagemRemota = null;
+                await http.PutAsJsonAsync("api/produto", produto);
+                logger.LogInformation("Produto editado com sucesso.");
+                navigation.NavigateTo("produto");
+            }
+            else
+            {
+                logger.LogWarning("Tentativa de editar produto nulo.");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao editar o produto.");
+        }
+    }
+}

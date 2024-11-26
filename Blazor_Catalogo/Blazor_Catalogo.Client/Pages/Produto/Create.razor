@@ -1,0 +1,36 @@
+﻿@page "/produto/create"
+@inject ILogger<Create> logger
+@inject HttpClient http
+
+<h2>Novo Produto</h2>
+
+<ProdutoForm Produto="@produto" OnValidSubmit="CriarProduto" 
+             ButtonTextCancelar="Cancelar"
+             ButtonTextSubmit="Salvar">
+</ProdutoForm>
+
+@code {
+
+    private Produto produto = new Produto();
+
+    async Task CriarProduto()
+    {
+        try
+        {
+            logger.LogInformation("Enviando requisição para criar um novo produto...");
+            // Verifica se a imagemRemota é nula para evitar uma possível exceção de referência nula
+            if (produto.ImagemUrl == null)
+            {
+                produto.ImagemUrl = string.Empty;
+            }
+
+            await http.PostAsJsonAsync("api/produto", produto);
+            logger.LogInformation("Novo produto criado com sucesso.");
+            navigation.NavigateTo("produto");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao criar um novo produto.");
+        }
+    }
+}

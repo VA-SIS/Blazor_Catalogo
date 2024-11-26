@@ -1,0 +1,57 @@
+﻿@page "/categoria/create"
+@inject ILogger<Create> logger
+@inject HttpClient http
+
+<h2>Nova Categoria</h2>
+
+<CategoriaForm Categoria="@categoria" OnValidSubmit="@CriarCategoria"
+               ButtonTextSubmit="Salvar" ButtonTextCancelar="Cancelar">
+
+</CategoriaForm>
+
+<ExibeErro ErrorMessage="@errorMessage" />
+
+@code {
+
+    private string errorMessage = "";
+    Categoria categoria = new Categoria();
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Focus("txtCategoriaNome");
+        }
+    }
+
+    public async Task Focus(string elementId)
+    {
+        await js.InvokeVoidAsync("focusById", elementId);
+    }
+
+    async Task CriarCategoria()
+    {
+        try
+        {
+            logger.LogInformation("Enviando requisição para criar uma nova categoria...");
+            var result = await http.PostAsJsonAsync("api/categoria", categoria);
+            logger.LogInformation("Requisição de criação de categoria enviada com sucesso.");
+
+            if (result.IsSuccessStatusCode)
+            {
+                logger.LogInformation("Nova categoria criada com sucesso.");
+                navigation.NavigateTo("categoria");
+            }
+            else
+            {
+                logger.LogWarning("Falha ao criar a categoria. Status: {StatusCode}", result.StatusCode);
+                errorMessage = "Falha ao criar a categoria.";
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao criar a categoria");
+            errorMessage = "Erro ao criar a categoria.";
+        }
+    }
+}
